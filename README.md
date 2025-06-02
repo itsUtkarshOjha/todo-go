@@ -1,4 +1,4 @@
-# Todo App on Kubernetes with JWT Auth, Redis, and ScyllaDB
+# Todo App on Kubernetes with Redis and ScyllaDB
 
 This is a Gin-based Todo application deployed on a local Kubernetes cluster using Kind. It uses Envoy Proxy for JWT-based authentication, ScyllaDB as the primary database, and Redis for caching. The application is containerized with Docker and managed with Helm in a monorepo setup.
 
