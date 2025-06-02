@@ -1,0 +1,68 @@
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address:
+        protocol: TCP
+        address: 0.0.0.0
+        port_value: 8080
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager"
+          stat_prefix: ingress_http
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: default
+              domains:
+              - "*"
+              routes:
+              - match:
+                  prefix: "/health"
+                route: { cluster: todo-app }
+              - match:
+                  prefix: "/"
+                route: { cluster: todo-app }
+          http_filters:
+          - name: envoy.filters.http.jwt_authn
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+              providers:
+                provider_name2:
+                  issuer: your-issuer
+                  local_jwks:
+                    inline_string: >-
+                      {"keys": [
+                        {"kty":"RSA",
+                         "n": "s4BqdkPhCcKCi-QTh6cpcDAC2Rt4mQjFLro8YLtcboIsaQsFGOJrcwCNGbI22vb2RVWcyu8HPH5nfSY4RG5ZkC1Qj4bzzzN-4YaeGd7gCihU9BOlel3D5SZwlMdM8RvYgQkQWHQjeOhlzZioQVZQ6fHbaAKW6EXkCPxlcMWXwWh_FqIQMbOhxSra1wLusaoh90hlk8CE7_871tISg8qhaviEYDeiJlfkWgVsMp1KEWRX6VPXY8HAmmPDTFReNjpcdX4qlRWHLzN6mSWQRFOrLlylFhea5dBgpIbmN7RGv2mc-Ni4z9QSnkYKwh6kLUUPl7GBn_PHe5Yf9L0Wk1O-dw",
+                         "e":"AQAB",
+                         "alg":"RS256",
+                         "kid":"2IApv4givrrxDbZO-007h_G0226qUWrBUBWTHNt93JI"}]}
+                  from_headers:
+                  - name: jwt-assertion
+                  forward: true
+                  forward_payload_header: x-jwt-payload
+              rules:
+              - match:
+                  prefix: "/health"
+                requires:
+                  provider_name: provider_name2
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+  clusters:
+  - name: todo-app
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: todo-app
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: todo-app.default.svc.cluster.local
+                port_value: 3000

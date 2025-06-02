@@ -10,8 +10,13 @@ import (
 func DatabaseConnection() *gocql.Session {
 	config := LoadConfig()
 	cluster := gocql.NewCluster(config.SCYLLA_HOST)
+	cluster.Port = config.SCYLLA_PORT
 	cluster.Keyspace = config.KEYSPACE
 	cluster.Consistency = gocql.Quorum
+	cluster.Authenticator = gocql.PasswordAuthenticator{
+		Username: config.SCYLLA_USERNAME,
+		Password: config.SCYLLA_PASSWORD,
+	}
 
 	session, err := cluster.CreateSession()
 	if err != nil {

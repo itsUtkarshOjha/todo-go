@@ -52,8 +52,13 @@ func main() {
 	router.GET("/todo", getAllTodos)
 	router.GET("/todo/:id", getTodoById)
 	router.PUT("/todo/:id", updateTodo)
+	router.GET("/health", getHealth)
 
 	router.Run(":" + config.PORT)
+}
+
+func getHealth(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, "Server is working fine.")
 }
 
 func saveTodo(todo Todo) error {
